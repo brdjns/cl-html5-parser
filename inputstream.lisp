@@ -46,22 +46,23 @@
 
 ;; 12.2.2.2 Character encodings
 (defun find-encoding (encoding-name)
-  ;; Normalize the string designator
-  (setf encoding-name (string-upcase (substitute #\- #\_ (string-trim +space-characters+ (string encoding-name)))))
-  ;; All known encoding will already be interned in the keyword package so find-symbol is fine here
-  (setf encoding-name (find-symbol encoding-name :keyword))
+  (when encoding-name
+    ;; Normalize the string designator
+    (setf encoding-name (string-upcase (substitute #\- #\_ (string-trim +space-characters+ (string encoding-name)))))
+    ;; All known encoding will already be interned in the keyword package so find-symbol is fine here
+    (setf encoding-name (find-symbol encoding-name :keyword))
 
-  (handler-case
-      ;; Verfiy that flexi-streams knows the encoding and resolve aliases
-      (case (flex:external-format-name (flex:make-external-format encoding-name))
-        ;; Some encoding should be replaced by some other.
-        ;; Only those supported by flexi-streams are listed here.
-        ;; iso-8859-11 should be replaced by windows-874, but flexi-streams doesn't that encoding.
-        (:iso-8859-1 :windows-1252)
-        (:iso-8859-9 :windows-1254)
-        (:us-ascii :windows-1252)
-        (otherwise encoding-name))
-    (flex:external-format-error ())))
+    (handler-case
+        ;; Verfiy that flexi-streams knows the encoding and resolve aliases
+        (case (flex:external-format-name (flex:make-external-format encoding-name))
+          ;; Some encoding should be replaced by some other.
+          ;; Only those supported by flexi-streams are listed here.
+          ;; iso-8859-11 should be replaced by windows-874, but flexi-streams doesn't that encoding.
+          (:iso-8859-1 :windows-1252)
+          (:iso-8859-9 :windows-1254)
+          (:us-ascii :windows-1252)
+          (otherwise encoding-name))
+      (flex:external-format-error ()))))
 
 ;; 12.2.2.1 Determining the character encoding
 (defun detect-encoding (stream override-encoding fallback-encoding)
